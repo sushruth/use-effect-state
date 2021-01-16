@@ -30,9 +30,9 @@ describe('useEventState', () => {
     );
 
     await act(async () => {
-      await result.current.dispatch(Actions.A);
-      expect(result.current.state.a).toEqual(1);
-      expect(result.current.state.b).toEqual(undefined);
+      await result.current[1](Actions.A);
+      expect(result.current[0].a).toEqual(1);
+      expect(result.current[0].b).toEqual(undefined);
     });
   });
 
@@ -45,10 +45,10 @@ describe('useEventState', () => {
     );
 
     await act(async () => {
-      await result.current.dispatch(Actions.A);
-      const res = await result.current.dispatch(Actions.B);
-      expect(result.current.state.a).toEqual(1);
-      expect(result.current.state.b).toEqual(2);
+      await result.current[1](Actions.A);
+      const res = await result.current[1](Actions.B);
+      expect(result.current[0].a).toEqual(1);
+      expect(result.current[0].b).toEqual(2);
       expect(res).toEqual(expect.objectContaining({ b: 2 }));
     });
   });
@@ -64,7 +64,7 @@ describe('useEventState', () => {
     unmount();
 
     await act(async () => {
-      await result.current.dispatch(Actions.A);
+      await result.current[1](Actions.A);
     });
   });
 
@@ -101,7 +101,7 @@ describe('useEventState', () => {
     );
 
     act(() => {
-      expect(result.current.dispatch(Actions.A)).rejects.toContain(
+      expect(result.current[1](Actions.A)).rejects.toContain(
         dispatchMaxCircularCalls
       );
     });

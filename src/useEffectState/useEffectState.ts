@@ -23,7 +23,7 @@ import {
  */
 export function useEffectState<S, A extends string = string>(
   initialState: S,
-  initialEffects: EffectRecord<A | string, S>,
+  initialEffects?: EffectRecord<A | string, S>,
   options?: EffectStateOptions
 ) {
   /**
@@ -132,7 +132,7 @@ export function useEffectState<S, A extends string = string>(
   // side-effects = functions that receive the current state but do not return a new state
   // main-effects = same as side-effects except that a new `state` is returned
   const addEffect = useCallback(
-    (action: A, effect: Effect<A | string, S>) => {
+    (action: A | string, effect: Effect<A | string, S>) => {
       const listener = getListener(effect);
       const handlers = allEffectsArray.current[action] as
         | EventHandler[]
@@ -166,17 +166,15 @@ export function useEffectState<S, A extends string = string>(
 
   // To initialize the intiailEffects
   useEffect(() => {
-    for (const action in initialEffectsArray.current) {
-      const effect = initialEffectsArray.current[action];
-      addEffect(action as A, effect);
+    if (initialEffectsArray.current) {
+      for (const action in initialEffectsArray.current) {
+        const effect = initialEffectsArray.current[action];
+        addEffect(action as A, effect);
+      }
     }
 
     return cleanup;
   }, [cleanup, addEffect]);
 
-  return {
-    state,
-    dispatch: dispatch as DispatchEffect<A | string, S>,
-    addEffect,
-  };
+  return [state, dispatch as DispatchEffect<A | string, S>, addEffect] as const;
 }
