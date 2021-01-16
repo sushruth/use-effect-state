@@ -1,5 +1,6 @@
 import { act, renderHook } from '@testing-library/react-hooks';
 import { useEffectState } from './useEffectState';
+import { Effect } from './useEffectState.types';
 
 describe('useEventState', () => {
   enum Actions {
@@ -64,6 +65,45 @@ describe('useEventState', () => {
 
     await act(async () => {
       await result.current.dispatch(Actions.A);
+    });
+  });
+
+  it('dispatch rejects when circular maxDepth is reached', async () => {
+    const circularEffectA: Effect<Actions, State> = async (state, dispatch) => {
+      await dispatch(Actions.B);
+      return {
+        ...state,
+        a: state.a + 1,
+      };
+    };
+
+    const circularEffectB: Effect<Actions, State> = async (state, dispatch) => {
+      await dispatch(Actions.A);
+      return {
+        ...state,
+        a: state.b + 1,
+      };
+    };
+
+    const dispatchMaxCircularCalls = 200;
+
+    const { result } = renderHook(() =>
+      useEffectState<State>(
+        {},
+        {
+          [Actions.A]: circularEffectA,
+          [Actions.B]: circularEffectB,
+        },
+        {
+          dispatchMaxCircularCalls,
+        }
+      )
+    );
+
+    act(() => {
+      expect(result.current.dispatch(Actions.A)).rejects.toContain(
+        dispatchMaxCircularCalls
+      );
     });
   });
 });
